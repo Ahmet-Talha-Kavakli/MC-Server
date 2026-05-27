@@ -76,6 +76,18 @@ public final class HubNpcs {
         hologramTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             HubNpc bw = registry.get("bedwars");
             if (bw != null) bw.updateHologram(bedwarsHologram());
+
+            // Themed NPC particle pulse — every tick that this runs (1 Hz).
+            if (Bukkit.getOnlinePlayers().isEmpty()) return;
+            for (String id : new String[]{"bedwars", "cosmetic", "profile", "tutorial"}) {
+                HubNpc npc = registry.get(id);
+                if (npc != null && npc.location().getWorld() != null) {
+                    com.reinacraft.hub.world.HubAtmosphere.pulseNpc(
+                            npc.location().getWorld(),
+                            npc.location(),
+                            id);
+                }
+            }
         }, 0L, 20L);
     }
 

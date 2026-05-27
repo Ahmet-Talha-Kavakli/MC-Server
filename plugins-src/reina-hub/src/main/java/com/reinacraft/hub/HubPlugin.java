@@ -8,6 +8,7 @@ import com.reinacraft.hub.npc.HubNpcs;
 import com.reinacraft.hub.ui.ScoreboardManager;
 import com.reinacraft.hub.ui.TabListManager;
 import com.reinacraft.hub.world.CastleBuilder;
+import com.reinacraft.hub.world.HubAtmosphere;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
@@ -55,6 +56,7 @@ public final class HubPlugin extends JavaPlugin implements Listener {
     private ScoreboardManager scoreboardManager;
     private TabListManager tabListManager;
     private HubNpcs hubNpcs;
+    private HubAtmosphere atmosphere;
 
     @Override
     public void onEnable() {
@@ -71,6 +73,9 @@ public final class HubPlugin extends JavaPlugin implements Listener {
         scoreboardManager.start();
         tabListManager = new TabListManager(this);
         tabListManager.start();
+
+        atmosphere = new HubAtmosphere(this, spawn);
+        atmosphere.start();
 
         hubNpcs = new HubNpcs(this, ReinaCore.get().npcRegistry());
         getServer().getScheduler().runTaskLater(this, () -> {
@@ -121,6 +126,7 @@ public final class HubPlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+        if (atmosphere != null) atmosphere.stop();
         if (hubNpcs != null) hubNpcs.shutdown();
         if (scoreboardManager != null) scoreboardManager.stop();
         if (tabListManager != null) tabListManager.stop();
@@ -295,7 +301,12 @@ public final class HubPlugin extends JavaPlugin implements Listener {
                 MM.deserialize("<gray>Kraliçenin Diyarı")
         ));
 
-        p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.6f, 1.0f);
+        // Welcome sound combo: toast → level-up → bell ring
+        p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 1.0f);
+        getServer().getScheduler().runTaskLater(this, () ->
+                p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 0.9f), 6L);
+        getServer().getScheduler().runTaskLater(this, () ->
+                p.playSound(p.getLocation(), Sound.BLOCK_BELL_USE, 0.4f, 1.2f), 14L);
     }
 
     @EventHandler

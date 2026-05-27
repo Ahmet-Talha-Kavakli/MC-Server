@@ -109,6 +109,104 @@ public final class CastleBuilder {
 
         // 8) Center spire above the spawn (mark of the queen)
         buildCentralSpire(b, 0, floorY, 0);
+
+        // 9) Phase 3.3 polish: braziers, banners, fountain, invisible exit barriers.
+        buildGateBraziers(b, floorY);
+        buildBannerWall(b, floorY);
+        buildFountain(b, floorY);
+        buildExitBarriers(b, floorY);
+    }
+
+    private static void buildGateBraziers(SchematicBuilder b, int floorY) {
+        // Two braziers flank each of the 4 cardinal gates.
+        for (int[] gate : new int[][]{ {0, OUTER_RADIUS}, {0, -OUTER_RADIUS}, {OUTER_RADIUS, 0}, {-OUTER_RADIUS, 0} }) {
+            boolean wallIsZ = Math.abs(gate[1]) == OUTER_RADIUS;
+            int gx = gate[0], gz = gate[1];
+            // Offsets perpendicular to the wall axis, sitting just inside the castle
+            int[][] offsets = wallIsZ
+                    ? new int[][]{{-4, gz - signum(gz)}, {4, gz - signum(gz)}}
+                    : new int[][]{{gx - signum(gx), -4}, {gx - signum(gx), 4}};
+            for (int[] o : offsets) brazier(b, o[0], floorY, o[1]);
+        }
+    }
+
+    private static int signum(int v) { return Integer.signum(v); }
+
+    private static void brazier(SchematicBuilder b, int x, int floorY, int z) {
+        // 3-block tall brazier: deepslate base → iron bars → lava cap with iron bars sides
+        b.set(x, floorY + 1, z, Material.POLISHED_DEEPSLATE);
+        b.set(x, floorY + 2, z, Material.GOLD_BLOCK);
+        // Iron bars ring around top
+        b.set(x + 1, floorY + 3, z, Material.IRON_BARS);
+        b.set(x - 1, floorY + 3, z, Material.IRON_BARS);
+        b.set(x, floorY + 3, z + 1, Material.IRON_BARS);
+        b.set(x, floorY + 3, z - 1, Material.IRON_BARS);
+        // Lava on top — magma block to prevent flow, then fire on top
+        b.set(x, floorY + 3, z, Material.MAGMA_BLOCK);
+        b.set(x, floorY + 4, z, Material.FIRE);
+    }
+
+    private static void buildBannerWall(SchematicBuilder b, int floorY) {
+        // Decorative banners along the four inner wall faces, between the towers.
+        // Use red wool + gold blocks to imply hanging banners (real banners would need 1.21 banner items).
+        int wallInset = TOWER_RADIUS + 2;
+        for (int along = -OUTER_RADIUS + wallInset; along <= OUTER_RADIUS - wallInset; along += 4) {
+            for (int side : new int[]{-1, 1}) {
+                int zEdge = side * (OUTER_RADIUS - 1);
+                bannerStrip(b, along, floorY, zEdge);
+                int xEdge = side * (OUTER_RADIUS - 1);
+                bannerStrip(b, xEdge, floorY, along);
+            }
+        }
+    }
+
+    private static void bannerStrip(SchematicBuilder b, int x, int floorY, int z) {
+        // Vertical banner: 3 blocks of red wool with gold trim
+        b.set(x, floorY + 4, z, Material.GOLD_BLOCK);
+        b.set(x, floorY + 5, z, Material.RED_WOOL);
+        b.set(x, floorY + 6, z, Material.RED_WOOL);
+        b.set(x, floorY + 7, z, Material.GOLD_BLOCK);
+    }
+
+    private static void buildFountain(SchematicBuilder b, int floorY) {
+        // Small fountain ring around the central spire (outside the 7-radius spawn platform).
+        // Inner ring at radius 6, water source at center won't reach the platform.
+        int r = 6;
+        for (int dx = -r; dx <= r; dx++) {
+            for (int dz = -r; dz <= r; dz++) {
+                int d2 = dx * dx + dz * dz;
+                if (d2 == r * r || d2 == (r - 1) * (r - 1)) {
+                    // Skip — too close to existing platform tiling
+                    continue;
+                }
+            }
+        }
+        // Four quartz fountains at the cardinal positions, ringed with water
+        for (int[] p : new int[][]{ {0, 6}, {0, -6}, {6, 0}, {-6, 0} }) {
+            int fx = p[0], fz = p[1];
+            b.set(fx, floorY + 1, fz, Material.QUARTZ_BLOCK);
+            b.set(fx, floorY + 2, fz, Material.LAPIS_BLOCK);
+            b.set(fx, floorY + 3, fz, Material.WATER);
+        }
+    }
+
+    private static void buildExitBarriers(SchematicBuilder b, int floorY) {
+        // Invisible barrier wall on top of the outer perimeter to keep players inside the castle.
+        // 5 blocks tall above the wall crown.
+        for (int along = -OUTER_RADIUS; along <= OUTER_RADIUS; along++) {
+            for (int up = WALL_HEIGHT + 1; up <= WALL_HEIGHT + 6; up++) {
+                b.set(along, floorY + up, OUTER_RADIUS, Material.BARRIER);
+                b.set(along, floorY + up, -OUTER_RADIUS, Material.BARRIER);
+                b.set(OUTER_RADIUS, floorY + up, along, Material.BARRIER);
+                b.set(-OUTER_RADIUS, floorY + up, along, Material.BARRIER);
+            }
+        }
+        // Cap the open sky above the castle so they can't fly out
+        for (int x = -OUTER_RADIUS; x <= OUTER_RADIUS; x++) {
+            for (int z = -OUTER_RADIUS; z <= OUTER_RADIUS; z++) {
+                b.set(x, floorY + 30, z, Material.BARRIER);
+            }
+        }
     }
 
     private static void buildWallColumn(SchematicBuilder b, int x, int floorY, int z) {
