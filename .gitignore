@@ -1,0 +1,78 @@
+# =============================================================
+# ReinaCraft - .gitignore
+# =============================================================
+
+# --- Secrets (NEVER commit) -----------------------------------
+network/proxy/forwarding.secret
+# paper-global.yml contains the velocity forwarding secret - never commit
+network/*/config/paper-global.yml
+# paper-world-defaults.yml is auto-generated on first boot, no value in committing
+network/*/config/paper-world-defaults.yml
+
+# --- Server jars (large binaries, downloaded by setup script) -
+network/proxy/velocity.jar
+network/hub/paper.jar
+network/bedwars/paper.jar
+network/proxy/plugins/ViaVersion.jar
+network/proxy/plugins/ViaBackwards.jar
+network/proxy/plugins/ViaRewind.jar
+
+# --- Plugin jars (built artifacts) ----------------------------
+network/*/plugins/reina-*.jar
+plugins-src/**/target/
+
+# --- Server runtime data --------------------------------------
+network/hub/hub/
+network/hub/hub_nether/
+network/hub/hub_the_end/
+network/bedwars/bedwars_world/
+network/bedwars/bedwars_world_nether/
+network/bedwars/bedwars_world_the_end/
+network/*/cache/
+network/*/libraries/
+network/*/logs/
+network/*/versions/
+network/*/plugins/bStats/
+network/*/plugins/spark/
+network/*/plugins/ReinaHub/
+network/*/plugins/ViaVersion/
+network/*/plugins/ViaBackwards/
+network/*/plugins/ViaRewind/
+network/*/plugins/.paper-remapped/
+network/*/banned-ips.json
+network/*/banned-players.json
+network/*/usercache.json
+network/*/version_history.json
+network/*/whitelist.json
+network/*/permissions.yml
+network/*/help.yml
+network/*/commands.yml
+network/*/bukkit.yml
+network/*/spigot.yml
+network/*/network/
+network/proxy/lang/
+network/proxy/logs/
+
+# --- Tools (JDK, Maven binaries — large, OS-specific) ---------
+tools/
+
+# --- OS / IDE -------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+.factorypath
+
+# --- Maven local cache ----------------------------------------
+.m2/
+
+# --- Logs / temp ----------------------------------------------
+*.log
+*.tmp
+hs_err_pid*.log

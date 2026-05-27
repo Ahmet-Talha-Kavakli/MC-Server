@@ -1,0 +1,29 @@
+name: ReinaHub
+version: ${project.version}
+main: com.reinacraft.hub.HubPlugin
+api-version: '1.21'
+author: ReinaCraft
+description: ReinaCraft Hub / Lobby plugin - server selector, spawn, cosmetics
+website: https://reinacraft.com
+
+commands:
+  spawn:
+    description: Teleport to hub spawn
+    usage: /spawn
+    aliases: [hub, lobby]
+  setspawn:
+    description: Set the hub spawn point (OP only)
+    usage: /setspawn
+    permission: reinahub.setspawn
+  selector:
+    description: Open the game selector menu
+    usage: /selector
+    aliases: [games, oyunlar]
+
+permissions:
+  reinahub.setspawn:
+    description: Allows setting the hub spawn point
+    default: op
+  reinahub.build:
+    description: Allows building/breaking blocks in the hub
+    default: op
