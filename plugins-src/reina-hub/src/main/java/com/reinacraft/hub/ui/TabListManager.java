@@ -1,5 +1,6 @@
 package com.reinacraft.hub.ui;
 
+import com.reinacraft.core.ReinaCore;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -64,10 +65,11 @@ public final class TabListManager {
     private Component footer() {
         int online = Bukkit.getOnlinePlayers().size();
         int max = Bukkit.getMaxPlayers();
+        String serverName = ReinaCore.get().serverDisplayName();
         return MM.deserialize(
                 "\n" +
                         "<gray>Online: <green>" + online + "<dark_gray>/<green>" + max +
-                        "  <dark_gray>•</dark_gray>  <gray>Sunucu: <gold>HUB\n" +
+                        "  <dark_gray>•</dark_gray>  <gray>Sunucu: <gold>" + serverName + "\n" +
                         "<gradient:#FF1744:#FFD700><bold>reinacraft.com</bold></gradient>\n"
         );
     }

@@ -35,6 +35,13 @@ network/*/versions/
 network/*/plugins/bStats/
 network/*/plugins/spark/
 network/*/plugins/ReinaHub/
+# ReinaCore per-instance data dir (contains rendered config.yml with DB password)
+network/*/plugins/ReinaCore/
+# Citizens (if ever reinstalled — keep its data + jar out of git)
+network/*/plugins/Citizens/
+network/*/plugins/Citizens.jar
+# Backup files from sed/editor saves
+network/*/*.bak
 network/*/plugins/ViaVersion/
 network/*/plugins/ViaBackwards/
 network/*/plugins/ViaRewind/

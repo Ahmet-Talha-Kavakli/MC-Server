@@ -21,6 +21,12 @@
             <version>${paper.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>com.reinacraft</groupId>
+            <artifactId>reina-core</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>

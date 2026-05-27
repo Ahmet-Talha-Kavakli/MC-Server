@@ -1,0 +1,22 @@
+database:
+  host: 127.0.0.1
+  port: 3306
+  database: reinacraft
+  username: reinacraft
+  password: reinacraft_dev_pw
+  pool:
+    maximum-size: 10
+    minimum-idle: 2
+    connection-timeout-ms: 10000
+    idle-timeout-ms: 600000
+    max-lifetime-ms: 1800000
+
+redis:
+  host: 127.0.0.1
+  port: 6379
+  password: ''
+  database: 0
+
+server:
+  id: hub
+  display-name: HUB

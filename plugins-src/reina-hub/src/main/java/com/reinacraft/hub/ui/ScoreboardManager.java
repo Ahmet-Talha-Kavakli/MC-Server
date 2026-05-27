@@ -1,5 +1,8 @@
 package com.reinacraft.hub.ui;
 
+import com.reinacraft.core.ReinaCore;
+import com.reinacraft.core.player.PlayerData;
+import com.reinacraft.core.rank.Rank;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -23,9 +26,9 @@ public final class ScoreboardManager {
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
     private static final String[] LINE_ENTRIES = new String[]{
-            "\u00A70", "\u00A71", "\u00A72", "\u00A73", "\u00A74",
-            "\u00A75", "\u00A76", "\u00A77", "\u00A78", "\u00A79",
-            "\u00A7a", "\u00A7b", "\u00A7c", "\u00A7d", "\u00A7e"
+            "§0", "§1", "§2", "§3", "§4",
+            "§5", "§6", "§7", "§8", "§9",
+            "§a", "§b", "§c", "§d", "§e"
     };
 
     private static final String[][] GRADIENT_FRAMES = new String[][]{
@@ -37,10 +40,6 @@ public final class ScoreboardManager {
             {"#FFD700", "#FF1744"},
             {"#FF8A65", "#FF1744"},
             {"#FF4D4D", "#FF1744"}
-    };
-
-    private static final String[] RAINBOW = {
-            "#FF1744", "#FF9100", "#FFEA00", "#00E676", "#00B0FF", "#D500F9"
     };
 
     private final Plugin plugin;
@@ -115,18 +114,27 @@ public final class ScoreboardManager {
     private List<Component> buildLines(Player p) {
         int online = Bukkit.getOnlinePlayers().size();
         int max = Bukkit.getMaxPlayers();
-        String rank = p.isOp() ? animatedRainbowTag("YÖNETİCİ") : "<#AAAAAA>Oyuncu";
+
+        PlayerData data = ReinaCore.get().playerData().getCached(p.getUniqueId());
+        Rank rank = data != null ? data.rank() : Rank.MEMBER;
+        long coins = data != null ? data.coins() : 0L;
+        long gems = data != null ? data.gems() : 0L;
+        int level = data != null ? data.level() : 1;
+
+        Component rankComp = rank == Rank.MEMBER
+                ? MM.deserialize("<#AAAAAA>Üye")
+                : rank.prefix();
 
         List<Component> lines = new ArrayList<>();
         lines.add(MM.deserialize("<dark_gray><st>                    </st>"));
         lines.add(MM.deserialize("<gray>Oyuncu: <white>" + p.getName()));
-        lines.add(MM.deserialize("<gray>Rank: " + rank));
+        lines.add(MM.deserialize("<gray>Rank: ").append(rankComp));
         lines.add(Component.empty());
-        lines.add(MM.deserialize("<gray>Coin: <gold>0 ⛁"));
-        lines.add(MM.deserialize("<gray>Gem: <aqua>0 ❖"));
-        lines.add(MM.deserialize("<gray>Level: <yellow>1"));
+        lines.add(MM.deserialize("<gray>Coin: <gold>" + coins + " ⛁"));
+        lines.add(MM.deserialize("<gray>Gem: <aqua>" + gems + " ❖"));
+        lines.add(MM.deserialize("<gray>Level: <yellow>" + level));
         lines.add(Component.empty());
-        lines.add(MM.deserialize("<gray>Sunucu: <gold>HUB"));
+        lines.add(MM.deserialize("<gray>Sunucu: <gold>" + ReinaCore.get().serverDisplayName()));
         lines.add(MM.deserialize("<gray>Online: <green>" + online + "<dark_gray>/<green>" + max));
         lines.add(Component.empty());
         lines.add(MM.deserialize("<gradient:#FF1744:#FFD700><bold>reinacraft.com</bold></gradient>"));
@@ -137,15 +145,5 @@ public final class ScoreboardManager {
     private Component animatedTitle() {
         String[] colors = GRADIENT_FRAMES[frame];
         return MM.deserialize("<gradient:" + colors[0] + ":" + colors[1] + "><bold>✦ REINACRAFT ✦</bold></gradient>");
-    }
-
-    private String animatedRainbowTag(String text) {
-        StringBuilder sb = new StringBuilder("<gradient");
-        int offset = (frame * 2) % RAINBOW.length;
-        for (int i = 0; i < RAINBOW.length; i++) {
-            sb.append(':').append(RAINBOW[(i + offset) % RAINBOW.length]);
-        }
-        sb.append("><bold>").append(text).append("</bold></gradient>");
-        return sb.toString();
     }
 }

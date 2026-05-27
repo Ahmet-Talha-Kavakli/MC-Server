@@ -5,6 +5,7 @@ api-version: '1.21'
 author: ReinaCraft
 description: ReinaCraft Hub / Lobby plugin - server selector, spawn, cosmetics
 website: https://reinacraft.com
+depend: [ReinaCore]
 
 commands:
   spawn:

@@ -1,0 +1,33 @@
+name: ReinaCore
+version: ${project.version}
+main: com.reinacraft.core.ReinaCore
+api-version: '1.21'
+author: ReinaCraft
+description: ReinaCraft shared library — database, redis, player data, rank, economy, GUI, commands
+website: https://reinacraft.com
+load: STARTUP
+
+commands:
+  rank:
+    description: View or modify a player's rank
+    usage: /rank <player> [set <rank>]
+    permission: reinacore.rank
+  coins:
+    description: View or modify a player's coins
+    usage: /coins <player> [give|set|take <amount>]
+    permission: reinacore.coins
+  gems:
+    description: View or modify a player's gems
+    usage: /gems <player> [give|set|take <amount>]
+    permission: reinacore.gems
+
+permissions:
+  reinacore.rank:
+    description: Manage ranks
+    default: op
+  reinacore.coins:
+    description: Manage coins
+    default: op
+  reinacore.gems:
+    description: Manage gems
+    default: op

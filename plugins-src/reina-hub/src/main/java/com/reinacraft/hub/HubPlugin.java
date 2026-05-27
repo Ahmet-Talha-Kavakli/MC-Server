@@ -1,10 +1,13 @@
 package com.reinacraft.hub;
 
+import com.reinacraft.core.ReinaCore;
+import com.reinacraft.core.gui.Menu;
+import com.reinacraft.core.gui.MenuBuilder;
 import com.reinacraft.hub.listener.ChatListener;
+import com.reinacraft.hub.npc.HubNpcs;
 import com.reinacraft.hub.ui.ScoreboardManager;
 import com.reinacraft.hub.ui.TabListManager;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextDecoration;
+import com.reinacraft.hub.world.CastleBuilder;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
@@ -12,7 +15,6 @@ import org.bukkit.GameMode;
 import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -30,14 +32,11 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -50,21 +49,19 @@ public final class HubPlugin extends JavaPlugin implements Listener {
 
     public static final MiniMessage MM = MiniMessage.miniMessage();
 
-    private static final Component SELECTOR_TITLE = MM.deserialize(
-            "<dark_gray>» <gradient:#FF1744:#FFD700>Oyun Seçimi</gradient> <dark_gray>«"
-    );
-
     private static final int SELECTOR_SLOT = 4;
 
     private Location spawn;
     private ScoreboardManager scoreboardManager;
     private TabListManager tabListManager;
+    private HubNpcs hubNpcs;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         loadSpawn();
         buildSpawnPlatformIfNeeded();
+        buildCastleIfNeeded();
 
         getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
         getServer().getPluginManager().registerEvents(this, this);
@@ -74,6 +71,29 @@ public final class HubPlugin extends JavaPlugin implements Listener {
         scoreboardManager.start();
         tabListManager = new TabListManager(this);
         tabListManager.start();
+
+        hubNpcs = new HubNpcs(this, ReinaCore.get().npcRegistry());
+        getServer().getScheduler().runTaskLater(this, () -> {
+            // Wipe any leftover villager/interaction/text_display entities near spawn (from prior boots).
+            org.bukkit.World world = spawn.getWorld();
+            int cx = spawn.getBlockX() >> 4;
+            int cz = spawn.getBlockZ() >> 4;
+            for (int dx = -3; dx <= 3; dx++)
+                for (int dz = -3; dz <= 3; dz++)
+                    world.getChunkAt(cx + dx, cz + dz).load(true);
+            int removed = 0;
+            for (org.bukkit.entity.Entity e : world.getEntities()) {
+                if (spawn.distance(e.getLocation()) > 40) continue;
+                if (e.getType() == org.bukkit.entity.EntityType.VILLAGER
+                        || e.getType() == org.bukkit.entity.EntityType.INTERACTION
+                        || e.getType() == org.bukkit.entity.EntityType.TEXT_DISPLAY) {
+                    e.remove();
+                    removed++;
+                }
+            }
+            if (removed > 0) getLogger().info("Wiped " + removed + " stale NPC entities before fresh spawn");
+            hubNpcs.spawnAll(world, spawn.getBlockX(), spawn.getBlockY(), spawn.getBlockZ());
+        }, 20L);
 
         for (World w : Bukkit.getWorlds()) {
             w.setTime(6000);
@@ -101,9 +121,58 @@ public final class HubPlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+        if (hubNpcs != null) hubNpcs.shutdown();
         if (scoreboardManager != null) scoreboardManager.stop();
         if (tabListManager != null) tabListManager.stop();
         getLogger().info("ReinaHub disabled");
+    }
+
+    @SuppressWarnings("unused")
+    private void cleanupLegacyVillagerNpcs_DISABLED() {
+        org.bukkit.NamespacedKey npcKey = new org.bukkit.NamespacedKey("reinacraft", "npc_id");
+        int removed = 0;
+        if (spawn == null || spawn.getWorld() == null) return;
+
+        org.bukkit.World world = spawn.getWorld();
+        // Force-load chunks in a 64×64 area around spawn so we can sweep their entities.
+        int cx = spawn.getBlockX() >> 4;
+        int cz = spawn.getBlockZ() >> 4;
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+                world.getChunkAt(cx + dx, cz + dz).load(true);
+            }
+        }
+
+        for (org.bukkit.entity.Entity e : world.getEntities()) {
+            if (spawn.distance(e.getLocation()) > 40) continue;
+
+            // 1) Anything tagged with our PDC marker
+            if (e.getPersistentDataContainer().has(npcKey, org.bukkit.persistence.PersistentDataType.STRING)) {
+                e.remove();
+                removed++;
+                continue;
+            }
+            // 2) Stale villagers, interactions, or text displays near spawn (pre-Citizens build leftovers).
+            //    Citizens uses NPC entities (real Player-type) and registers them via its own metadata —
+            //    a true Citizens NPC has CitizensAPI.getNPCRegistry().isNPC(entity) true.
+            if (e.getType() == org.bukkit.entity.EntityType.VILLAGER
+                    || e.getType() == org.bukkit.entity.EntityType.INTERACTION
+                    || e.getType() == org.bukkit.entity.EntityType.TEXT_DISPLAY) {
+                e.remove();
+                removed++;
+            }
+        }
+        if (removed > 0) getLogger().info("Cleaned up " + removed + " legacy NPC entities near spawn");
+        else getLogger().info("No legacy NPC entities found near spawn");
+    }
+
+    private void buildCastleIfNeeded() {
+        FileConfiguration cfg = getConfig();
+        if (cfg.getBoolean("hub.castle-built", false)) return;
+        CastleBuilder.build(spawn.getWorld(), spawn.getBlockX(), spawn.getBlockY(), spawn.getBlockZ());
+        cfg.set("hub.castle-built", true);
+        saveConfig();
+        getLogger().info("Castle built around spawn @ " + spawn.getBlockX() + "," + spawn.getBlockY() + "," + spawn.getBlockZ());
     }
 
     private void loadSpawn() {
@@ -266,11 +335,6 @@ public final class HubPlugin extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void onSlotChange(PlayerItemHeldEvent e) {
-        // No restrictions, but ensure compass stays usable
-    }
-
-    @EventHandler
     public void onBlockBreak(BlockBreakEvent e) {
         if (!e.getPlayer().hasPermission("reinahub.build")) {
             e.setCancelled(true);
@@ -302,78 +366,61 @@ public final class HubPlugin extends JavaPlugin implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player p)) return;
-
-        Component viewTitle = e.getView().title();
-        if (viewTitle.equals(SELECTOR_TITLE)) {
-            e.setCancelled(true);
-            if (e.getCurrentItem() == null) return;
-
-            switch (e.getSlot()) {
-                case 13 -> {
-                    p.closeInventory();
-                    p.sendMessage(MM.deserialize("<gray>Zaten <gold>Hub</gold>'dasın!"));
-                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f, 1.0f);
-                }
-                case 11 -> {
-                    p.closeInventory();
-                    sendToServer(p, "bedwars");
-                }
-                case 15 -> {
-                    p.sendMessage(MM.deserialize("<gray>Bu oyun modu <gold>yakında</gold> eklenecek!"));
-                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f, 0.8f);
-                }
-            }
-            return;
-        }
-
-        // In hub world prevent moving items in own inventory unless builder
+        // Prevent inventory manipulation in hub world unless builder.
+        // Selector menu clicks are handled by reina-core's MenuListener (its handler runs first).
+        if (e.getInventory().getHolder() instanceof com.reinacraft.core.gui.MenuHolder) return;
         if (p.getWorld().equals(spawn.getWorld()) && !p.hasPermission("reinahub.build")) {
             e.setCancelled(true);
         }
     }
 
     private void openSelector(Player p) {
-        Inventory inv = Bukkit.createInventory(null, 27, SELECTOR_TITLE);
-
-        inv.setItem(11, namedItem(Material.RED_BED,
-                "<gradient:#FF1744:#FFD700><bold>BedWars</bold></gradient>",
-                List.of(
-                        "<gray>Yatağını koru, düşmanlarınkini yık!",
-                        "<gray>Solo • Doubles • Trios • Squads",
-                        "",
-                        "<dark_gray>● <gray>Oyuncu: <gold>0",
-                        "<dark_gray>● <gray>Durum: <green>Açık",
-                        "",
-                        "<yellow>▶ Tıkla ve katıl!"
-                )));
-
-        inv.setItem(13, namedItem(Material.NETHER_STAR,
-                "<gold><bold>Hub</bold></gold>",
-                List.of(
-                        "<gray>ReinaCraft Lobby",
-                        "",
-                        "<dark_gray>● <gray>Zaten buradasın!"
-                )));
-
-        inv.setItem(15, namedItem(Material.BARRIER,
-                "<dark_gray><bold>Yakında...</bold>",
-                List.of(
-                        "<gray>SkyWars, MurderMystery,",
-                        "<gray>BuildBattle ve daha fazlası",
-                        "<gray>yakında geliyor!"
-                )));
-
-        ItemStack filler = namedItem(Material.BLACK_STAINED_GLASS_PANE, " ", List.of());
-        for (int i = 0; i < inv.getSize(); i++) {
-            if (inv.getItem(i) == null) inv.setItem(i, filler);
-        }
-
-        p.openInventory(inv);
+        Menu menu = MenuBuilder.of("<dark_gray>» <gradient:#FF1744:#FFD700>Oyun Seçimi</gradient> <dark_gray>«")
+                .rows(3)
+                .item(11, Material.RED_BED,
+                        "<gradient:#FF1744:#FFD700><bold>BedWars</bold></gradient>",
+                        List.of(
+                                "<gray>Yatağını koru, düşmanlarınkini yık!",
+                                "<gray>Solo • Doubles • Trios • Squads",
+                                "",
+                                "<dark_gray>● <gray>Durum: <green>Açık",
+                                "",
+                                "<yellow>▶ Tıkla ve katıl!"
+                        ),
+                        (player, click) -> {
+                            player.closeInventory();
+                            sendToServer(player, "bedwars");
+                        })
+                .item(13, Material.NETHER_STAR,
+                        "<gold><bold>Hub</bold></gold>",
+                        List.of(
+                                "<gray>ReinaCraft Lobby",
+                                "",
+                                "<dark_gray>● <gray>Zaten buradasın!"
+                        ),
+                        (player, click) -> {
+                            player.closeInventory();
+                            player.sendMessage(MM.deserialize("<gray>Zaten <gold>Hub</gold>'dasın!"));
+                            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f, 1.0f);
+                        })
+                .item(15, Material.BARRIER,
+                        "<dark_gray><bold>Yakında...</bold>",
+                        List.of(
+                                "<gray>SkyWars, MurderMystery,",
+                                "<gray>BuildBattle ve daha fazlası",
+                                "<gray>yakında geliyor!"
+                        ),
+                        (player, click) -> {
+                            player.sendMessage(MM.deserialize("<gray>Bu oyun modu <gold>yakında</gold> eklenecek!"));
+                            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.5f, 0.8f);
+                        })
+                .build();
+        menu.open(p);
         p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.2f);
     }
 
     private ItemStack createSelectorItem() {
-        return namedItem(Material.COMPASS,
+        return MenuBuilder.namedItem(Material.COMPASS,
                 "<gradient:#FF1744:#FFD700><bold>Oyun Seçici</bold></gradient> <dark_gray>(Sağ tık)",
                 List.of(
                         "<gray>ReinaCraft minigame'lerini",
@@ -381,17 +428,6 @@ public final class HubPlugin extends JavaPlugin implements Listener {
                         "",
                         "<yellow>▶ Sağ tıkla"
                 ));
-    }
-
-    private ItemStack namedItem(Material mat, String mmName, List<String> mmLore) {
-        ItemStack it = new ItemStack(mat);
-        ItemMeta meta = it.getItemMeta();
-        meta.displayName(MM.deserialize(mmName).decoration(TextDecoration.ITALIC, false));
-        meta.lore(mmLore.stream()
-                .map(s -> MM.deserialize(s).decoration(TextDecoration.ITALIC, false))
-                .toList());
-        it.setItemMeta(meta);
-        return it;
     }
 
     private void sendToServer(Player p, String server) {

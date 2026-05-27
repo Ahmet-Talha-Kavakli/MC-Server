@@ -1,5 +1,8 @@
 package com.reinacraft.hub.listener;
 
+import com.reinacraft.core.ReinaCore;
+import com.reinacraft.core.player.PlayerData;
+import com.reinacraft.core.rank.Rank;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -12,27 +15,20 @@ public final class ChatListener implements Listener {
 
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
-    private static final String RAINBOW_GRADIENT = "<gradient:#FF1744:#FF9100:#FFEA00:#00E676:#00B0FF:#D500F9>";
-
     @EventHandler
     public void onChat(AsyncChatEvent event) {
         Player p = event.getPlayer();
         String message = PlainTextComponentSerializer.plainText().serialize(event.message());
 
-        Component rank;
-        Component nameColor;
-        if (p.isOp()) {
-            rank = MM.deserialize(RAINBOW_GRADIENT + "<bold>★ YÖNETİCİ</bold></gradient> ");
-            nameColor = MM.deserialize(RAINBOW_GRADIENT + "<bold>" + p.getName() + "</bold></gradient>");
-        } else {
-            rank = MM.deserialize("<#AAAAAA>Oyuncu </#AAAAAA>");
-            nameColor = MM.deserialize("<white>" + p.getName());
-        }
+        PlayerData data = ReinaCore.get().playerData().getCached(p.getUniqueId());
+        Rank rank = data != null ? data.rank() : Rank.MEMBER;
 
+        Component prefix = rank.prefix();
+        Component nameColor = rank.coloredName(p.getName());
         Component msg = MM.deserialize("<gray>" + escape(message));
 
         Component formatted = Component.empty()
-                .append(rank)
+                .append(prefix)
                 .append(nameColor)
                 .append(MM.deserialize(" <dark_gray>»</dark_gray> "))
                 .append(msg);
