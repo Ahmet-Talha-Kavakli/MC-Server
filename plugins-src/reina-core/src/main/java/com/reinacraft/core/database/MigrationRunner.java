@@ -66,6 +66,8 @@ final class MigrationRunner {
         // Hard-coded ordered list; reflection-free, simple, fine for our scale.
         List<String> out = new ArrayList<>();
         out.add("V1__initial_schema.sql");
+        out.add("V2__cosmetics.sql");
+        out.add("V3__companions.sql");
         Collections.sort(out);
         return out;
     }

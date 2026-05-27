@@ -1,0 +1,145 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "all": "reinacraft:item/companions/royal_corgi"
+  },
+  "elements": [
+    {
+      "name": "body",
+      "from": [3, 2, 4],
+      "to": [13, 8, 12],
+      "faces": {
+        "down":  {"uv": [0, 8, 8, 16], "texture": "#all"},
+        "up":    {"uv": [0, 0, 8, 8],  "texture": "#all"},
+        "north": {"uv": [0, 0, 8, 8],  "texture": "#all"},
+        "south": {"uv": [8, 0, 16, 8], "texture": "#all"},
+        "west":  {"uv": [8, 8, 16, 16],"texture": "#all"},
+        "east":  {"uv": [0, 8, 8, 16], "texture": "#all"}
+      }
+    },
+    {
+      "name": "head",
+      "from": [10, 7, 3],
+      "to": [16, 13, 9],
+      "faces": {
+        "down":  {"uv": [0, 8, 6, 14], "texture": "#all"},
+        "up":    {"uv": [0, 0, 6, 6],  "texture": "#all"},
+        "north": {"uv": [0, 0, 6, 6],  "texture": "#all"},
+        "south": {"uv": [6, 0, 12, 6], "texture": "#all"},
+        "west":  {"uv": [6, 6, 12, 12],"texture": "#all"},
+        "east":  {"uv": [0, 6, 6, 12], "texture": "#all"}
+      }
+    },
+    {
+      "name": "ear_l",
+      "from": [10, 13, 3],
+      "to": [12, 15, 5],
+      "faces": {
+        "down":  {"uv": [0, 8, 2, 10], "texture": "#all"},
+        "up":    {"uv": [0, 0, 2, 2],  "texture": "#all"},
+        "north": {"uv": [0, 0, 2, 2],  "texture": "#all"},
+        "south": {"uv": [2, 0, 4, 2],  "texture": "#all"},
+        "west":  {"uv": [2, 2, 4, 4],  "texture": "#all"},
+        "east":  {"uv": [0, 2, 2, 4],  "texture": "#all"}
+      }
+    },
+    {
+      "name": "ear_r",
+      "from": [14, 13, 3],
+      "to": [16, 15, 5],
+      "faces": {
+        "down":  {"uv": [0, 8, 2, 10], "texture": "#all"},
+        "up":    {"uv": [0, 0, 2, 2],  "texture": "#all"},
+        "north": {"uv": [0, 0, 2, 2],  "texture": "#all"},
+        "south": {"uv": [2, 0, 4, 2],  "texture": "#all"},
+        "west":  {"uv": [2, 2, 4, 4],  "texture": "#all"},
+        "east":  {"uv": [0, 2, 2, 4],  "texture": "#all"}
+      }
+    },
+    {
+      "name": "leg_fl",
+      "from": [4, 0, 4],
+      "to": [6, 2, 6],
+      "faces": {
+        "down":  {"uv": [0, 8, 2, 10], "texture": "#all"},
+        "up":    {"uv": [0, 0, 2, 2],  "texture": "#all"},
+        "north": {"uv": [0, 0, 2, 2],  "texture": "#all"},
+        "south": {"uv": [2, 0, 4, 2],  "texture": "#all"},
+        "west":  {"uv": [2, 2, 4, 4],  "texture": "#all"},
+        "east":  {"uv": [0, 2, 2, 4],  "texture": "#all"}
+      }
+    },
+    {
+      "name": "leg_fr",
+      "from": [10, 0, 4],
+      "to": [12, 2, 6],
+      "faces": {
+        "down":  {"uv": [0, 8, 2, 10], "texture": "#all"},
+        "up":    {"uv": [0, 0, 2, 2],  "texture": "#all"},
+        "north": {"uv": [0, 0, 2, 2],  "texture": "#all"},
+        "south": {"uv": [2, 0, 4, 2],  "texture": "#all"},
+        "west":  {"uv": [2, 2, 4, 4],  "texture": "#all"},
+        "east":  {"uv": [0, 2, 2, 4],  "texture": "#all"}
+      }
+    },
+    {
+      "name": "leg_bl",
+      "from": [4, 0, 10],
+      "to": [6, 2, 12],
+      "faces": {
+        "down":  {"uv": [0, 8, 2, 10], "texture": "#all"},
+        "up":    {"uv": [0, 0, 2, 2],  "texture": "#all"},
+        "north": {"uv": [0, 0, 2, 2],  "texture": "#all"},
+        "south": {"uv": [2, 0, 4, 2],  "texture": "#all"},
+        "west":  {"uv": [2, 2, 4, 4],  "texture": "#all"},
+        "east":  {"uv": [0, 2, 2, 4],  "texture": "#all"}
+      }
+    },
+    {
+      "name": "leg_br",
+      "from": [10, 0, 10],
+      "to": [12, 2, 12],
+      "faces": {
+        "down":  {"uv": [0, 8, 2, 10], "texture": "#all"},
+        "up":    {"uv": [0, 0, 2, 2],  "texture": "#all"},
+        "north": {"uv": [0, 0, 2, 2],  "texture": "#all"},
+        "south": {"uv": [2, 0, 4, 2],  "texture": "#all"},
+        "west":  {"uv": [2, 2, 4, 4],  "texture": "#all"},
+        "east":  {"uv": [0, 2, 2, 4],  "texture": "#all"}
+      }
+    },
+    {
+      "name": "tail",
+      "from": [7, 6, 12],
+      "to": [9, 9, 14],
+      "faces": {
+        "down":  {"uv": [0, 8, 2, 10], "texture": "#all"},
+        "up":    {"uv": [0, 0, 2, 2],  "texture": "#all"},
+        "north": {"uv": [0, 0, 2, 3],  "texture": "#all"},
+        "south": {"uv": [2, 0, 4, 3],  "texture": "#all"},
+        "west":  {"uv": [2, 2, 4, 5],  "texture": "#all"},
+        "east":  {"uv": [0, 2, 2, 5],  "texture": "#all"}
+      }
+    },
+    {
+      "name": "crown",
+      "from": [11, 15, 4],
+      "to": [15, 16, 8],
+      "faces": {
+        "down":  {"uv": [0, 0, 4, 4], "texture": "#all"},
+        "up":    {"uv": [0, 0, 4, 4], "texture": "#all"},
+        "north": {"uv": [0, 0, 4, 1], "texture": "#all"},
+        "south": {"uv": [0, 0, 4, 1], "texture": "#all"},
+        "west":  {"uv": [0, 0, 4, 1], "texture": "#all"},
+        "east":  {"uv": [0, 0, 4, 1], "texture": "#all"}
+      }
+    }
+  ],
+  "display": {
+    "fixed": {
+      "rotation": [0, 0, 0],
+      "translation": [0, 0, 0],
+      "scale": [1, 1, 1]
+    }
+  }
+}

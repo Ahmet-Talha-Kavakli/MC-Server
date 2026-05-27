@@ -2,6 +2,11 @@ package com.reinacraft.core;
 
 import com.reinacraft.core.command.EconomyCommands;
 import com.reinacraft.core.command.RankCommand;
+import com.reinacraft.core.companion.CompanionManager;
+import com.reinacraft.core.companion.CompanionService;
+import com.reinacraft.core.cosmetic.CosmeticEffectManager;
+import com.reinacraft.core.cosmetic.CosmeticGadgetListener;
+import com.reinacraft.core.cosmetic.CosmeticService;
 import com.reinacraft.core.database.DatabaseManager;
 import com.reinacraft.core.economy.EconomyService;
 import com.reinacraft.core.gui.MenuListener;
@@ -22,6 +27,10 @@ public final class ReinaCore extends JavaPlugin {
     private PlayerDataService playerData;
     private EconomyService economy;
     private NpcRegistry npcRegistry;
+    private CosmeticService cosmetics;
+    private CosmeticEffectManager cosmeticEffects;
+    private CompanionService companionService;
+    private CompanionManager companionManager;
     private String serverId;
     private String serverDisplayName;
 
@@ -62,10 +71,20 @@ public final class ReinaCore extends JavaPlugin {
         playerData = new PlayerDataService(this, database, redis);
         economy = new EconomyService(this, database, playerData, serverId);
         npcRegistry = new NpcRegistry(this);
+        cosmetics = new CosmeticService(this, database);
+        cosmeticEffects = new CosmeticEffectManager(this, cosmetics);
+        cosmeticEffects.start();
 
-        getServer().getPluginManager().registerEvents(new PlayerSessionListener(this, playerData), this);
+        companionService = new CompanionService(this, database);
+        companionManager = new CompanionManager(this);
+        companionManager.start();
+
+        getServer().getPluginManager().registerEvents(new PlayerSessionListener(this, playerData, cosmetics, cosmeticEffects, companionService, companionManager), this);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
         getServer().getPluginManager().registerEvents(new NpcListener(), this);
+        getServer().getPluginManager().registerEvents(cosmeticEffects, this);
+        getServer().getPluginManager().registerEvents(new CosmeticGadgetListener(this), this);
+        getServer().getPluginManager().registerEvents(companionManager, this);
 
         new RankCommand(this, playerData).register();
         new EconomyCommands(this, economy).register();
@@ -76,6 +95,8 @@ public final class ReinaCore extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (companionManager != null) companionManager.stop();
+        if (cosmeticEffects != null) cosmeticEffects.stop();
         if (npcRegistry != null) npcRegistry.shutdown();
         if (playerData != null) playerData.flushAllSync();
         if (redis != null) redis.stop();
@@ -89,6 +110,10 @@ public final class ReinaCore extends JavaPlugin {
     public PlayerDataService playerData() { return playerData; }
     public EconomyService economy() { return economy; }
     public NpcRegistry npcRegistry() { return npcRegistry; }
+    public CosmeticService cosmetics() { return cosmetics; }
+    public CosmeticEffectManager cosmeticEffects() { return cosmeticEffects; }
+    public CompanionService companionService() { return companionService; }
+    public CompanionManager companionManager() { return companionManager; }
     public String serverId() { return serverId; }
     public String serverDisplayName() { return serverDisplayName; }
 }
